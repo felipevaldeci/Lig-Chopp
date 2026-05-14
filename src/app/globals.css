@@ -1,26 +1,154 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+
+  --color-bege: #fee6ce;
+  --color-vermelho: #c92b1f;
+  --color-laranja: #f79946;
+  --color-marrom: #6c2d01;
+  --color-bege-2: #8f7b65;
+  --color-bege-claro: #f5d9bd;
+  --color-dourado: #ddbb52;
+  --color-bege-3: #dec3a6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --font-display: "bodega-sans", sans-serif;
+  --font-body: "gotham", sans-serif;
+
+  --bege: #fee6ce;
+  --vermelho: #c92b1f;
+  --laranja: #f79946;
+  --marrom: #6c2d01;
+  --bege-2: #8f7b65;
+  --bege-claro: #f5d9bd;
+  --dourado: #ddbb52;
+  --bege-3: #dec3a6;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bege);
+  color: var(--marrom);
+  font-family: var(--font-body, sans-serif);
+}
+
+@layer base {
+  th {
+    text-align: inherit;
+  }
+}
+
+/* Button hover states */
+.btn-laranja:hover:not(:disabled) {
+  background-color: var(--vermelho) !important;
+  color: var(--bege) !important;
+}
+
+.btn-login:hover {
+  background-color: var(--laranja) !important;
+  color: var(--marrom) !important;
+  border-color: var(--laranja) !important;
+}
+
+.sidebar-nav-inactive:hover {
+  background-color: var(--laranja) !important;
+  color: var(--marrom) !important;
+  border-color: var(--laranja) !important;
+}
+
+.sidebar-nav-active:hover {
+  background-color: var(--laranja) !important;
+  color: var(--marrom) !important;
+}
+
+.sidebar-nav-btn:hover {
+  background-color: var(--laranja) !important;
+  color: var(--marrom) !important;
+  border-color: var(--laranja) !important;
+}
+
+.sidebar-sair:hover {
+  background-color: var(--laranja) !important;
+  color: var(--marrom) !important;
+  border-color: var(--laranja) !important;
+}
+
+.btn-voltar:hover {
+  background-color: var(--vermelho) !important;
+  color: var(--bege) !important;
+  border-color: var(--vermelho) !important;
+}
+
+.btn-seta:hover {
+  background-color: var(--vermelho) !important;
+  color: var(--bege) !important;
+}
+
+.btn-editar:hover {
+  background-color: var(--laranja) !important;
+  border-color: var(--laranja) !important;
+  color: var(--marrom) !important;
+}
+
+.btn-ver:hover {
+  background-color: var(--vermelho) !important;
+  color: var(--bege) !important;
+}
+
+/* Date inputs: custom icon approach — native input is opacity:0 over the SVG icon */
+input[type="date"] {
+  color-scheme: light;
+}
+
+/* Observations placeholder */
+.obs-textarea::placeholder { color: #8F7B65; }
+
+/* Select fields hover */
+.field-select-wrapper {
+  transition: border-color 0.15s, background-color 0.15s;
+}
+.field-select-wrapper:hover {
+  border-color: var(--marrom) !important;
+  background-color: rgba(108,45,1,0.06);
+}
+
+/* Date input fields hover */
+.date-field-wrapper {
+  transition: border-color 0.15s;
+}
+.date-field-wrapper:hover {
+  border-color: var(--marrom) !important;
+}
+
+/* Hide number input spinners */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] { -moz-appearance: textfield; }
+
+.no-print { }
+.print-only { display: none; }
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    min-height: 0 !important;
+  }
+
+  html, body { height: auto !important; }
+  aside { display: none !important; }
+  main  { margin-left: 0 !important; padding-bottom: 0 !important; }
+
+  .no-print   { display: none !important; }
+  .print-only { display: block !important; }
+
+  @page {
+    margin: 0;
+    size: A4 portrait;
+  }
 }
