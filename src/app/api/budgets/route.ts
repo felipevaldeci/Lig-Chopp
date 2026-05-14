@@ -29,8 +29,23 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const body = await req.json()
 
+  const year = new Date().getFullYear()
+  const { data: existingIds } = await supabase
+    .from('budgets')
+    .select('id')
+    .like('id', `ORC-${year}-%`)
+
+  const seqs = (existingIds ?? [])
+    .map((r: { id: string }) => r.id.split('-'))
+    .filter((parts: string[]) => parts.length === 3)
+    .map((parts: string[]) => parseInt(parts[2], 10))
+    .filter((n: number) => !isNaN(n))
+
+  const next = seqs.length > 0 ? Math.max(...seqs) + 1 : 1
+  const id = `ORC-${year}-${String(next).padStart(3, '0')}`
+
   const { error } = await supabase.from('budgets').insert({
-    id: body.id,
+    id,
     created_at: body.createdAt,
     vendedor: body.vendedor,
     vendedor_email: body.vendedorEmail,
@@ -44,5 +59,5 @@ export async function POST(req: NextRequest) {
   })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true, id })
 }

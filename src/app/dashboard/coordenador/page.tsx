@@ -220,7 +220,7 @@ export default function CoordenadorPage() {
           <thead>
             <tr style={{ borderBottom: '1px solid var(--bege-3)' }}>
               <th className="text-left text-[12px] font-medium uppercase tracking-wide px-4 py-3" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>Data</th>
-              <th className="text-left text-[12px] font-medium uppercase tracking-wide px-4 py-3" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>Orçamento</th>
+              <th className="text-left text-[12px] font-medium uppercase tracking-wide px-4 py-3" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)', minWidth: '170px' }}>Orçamento</th>
               <th className="text-left text-[12px] font-medium uppercase tracking-wide px-4 py-3" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>Vendedor</th>
               <th className="text-left text-[12px] font-medium uppercase tracking-wide px-4 py-3" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>Cliente</th>
               <th className="text-left text-[12px] font-medium uppercase tracking-wide px-4 py-3" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>Estilo</th>
@@ -250,7 +250,7 @@ export default function CoordenadorPage() {
                 <td className="px-4 py-3 text-[12px] whitespace-nowrap" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
                   {formatDate(budget.createdAt)}
                 </td>
-                <td className="px-4 py-3 text-[12px] font-mono" style={{ color: 'var(--marrom)' }}>
+                <td className="px-4 py-3 text-[12px] font-mono" style={{ color: 'var(--marrom)', whiteSpace: 'nowrap', wordBreak: 'keep-all' }}>
                   {budget.id}
                 </td>
                 <td className="px-4 py-3 text-[14px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
@@ -279,9 +279,9 @@ export default function CoordenadorPage() {
                 <td className="px-4 py-3 text-[14px] text-right font-medium" style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-body)' }}>
                   {formatCurrency(budget.total)}
                 </td>
-                <td className="px-4 py-3 text-center">
+                <td className="px-4 py-3 text-center whitespace-nowrap">
                   <span
-                    className="inline-flex items-center gap-1 text-[12px] font-medium px-3 py-1 rounded-full"
+                    className="inline-flex items-center gap-1 text-[12px] font-medium px-3 py-1 rounded-full whitespace-nowrap"
                     style={{
                       backgroundColor: budget.rdStatus === 'Enviado' ? 'rgba(52,168,83,0.15)' : 'rgba(201,43,31,0.15)',
                       color: budget.rdStatus === 'Enviado' ? '#1a7a35' : 'var(--vermelho)',
@@ -291,11 +291,11 @@ export default function CoordenadorPage() {
                     {budget.rdStatus === 'Enviado' ? '✓' : '!'} {budget.rdStatus}
                   </span>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-4 py-3 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedBudget(budget)}
-                      className="btn-ver text-[13px] font-medium px-3 py-1 rounded-[8px] cursor-pointer transition-all"
+                      className="btn-ver text-[13px] font-medium px-3 py-1 rounded-[8px] cursor-pointer transition-all whitespace-nowrap"
                       style={{ backgroundColor: 'var(--laranja)', color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
                     >
                       Ver →

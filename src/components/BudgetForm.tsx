@@ -34,11 +34,6 @@ interface CepResult {
   address: { logradouro: string; bairro: string; localidade: string; uf: string }
 }
 
-function generateBudgetId() {
-  const now = new Date()
-  const rand = Math.floor(Math.random() * 9000 + 1000)
-  return `ORC-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${rand}`
-}
 
 const CIRCLE_COLORS: Record<string, string> = {
   pilsen: '#DDBB52',
@@ -60,6 +55,8 @@ const LITER_OPTIONS = [
   { value: '30', label: '30L' },
   { value: '50', label: '50L' },
 ]
+
+const BARREL_ORDINALS = ['Segundo', 'Terceiro', 'Quarto', 'Quinto', 'Sexto', 'Sétimo']
 
 const PAYMENT_OPTIONS = [
   { value: 'pix',     label: 'PIX' },
@@ -338,54 +335,67 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
   async function handleAvançar() {
     if (!canSubmit) return
     const isEditing = !!initialData?.originalId
-    const id = isEditing ? initialData!.originalId! : generateBudgetId()
-    setBudgetId(id)
-    setShowConfirmation(true)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
 
     const address = cepResult?.address
     const discountAmount = discountNum > 0 ? (litersNum * priceNum + extraSubTotalNoDiscount) * (discountNum / 100) : 0
 
-    await fetch(isEditing ? `/api/budgets/${id}` : '/api/budgets', {
-      method: isEditing ? 'PATCH' : 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        id,
-        createdAt: new Date().toISOString(),
-        vendedor: user?.name ?? '',
-        vendedorEmail: user?.email ?? '',
-        cliente: clientName,
-        clientePhone: clientPhone,
-        estilo: selectedStyle?.name ?? '',
-        litros: totalAllLiters,
-        total: grandTotal,
-        details: {
-          addressLine: address ? `${address.logradouro}, ${address.bairro} — ${address.localidade}/${address.uf}` : null,
-          validUntil: validUntil || null,
-          freightValor: freightResult?.valor,
-          freightIsento: freightResult?.isento,
-          pricePerLiter: priceNum,
-          finalPrice,
-          discount: discountNum,
-          discountAmount,
-          deliveryDate: deliveryDate || null,
-          observations: observations || null,
-          chopperNote,
-          extraItems: extraBarrels.map(b => {
-            const style = b.styleId ? choppStyles.find(s => s.id === b.styleId) : selectedStyle
-            const tablePrice = style ? (b.liters >= 30 ? style.priceAbove30 : style.priceBelow30) : 0
-            const unitPrice = (b.styleId === selectedStyle?.id)
-              ? priceNum
-              : (typeof extraStylePrices[b.styleId] === 'number' ? extraStylePrices[b.styleId] as number : tablePrice)
-            return { liters: b.liters, unitPrice, styleName: style?.name ?? '' }
-          }),
-          clientCep,
-          mainLiters: litersNum,
-          paymentMethod,
-          installments,
-        },
-      }),
-    })
+    const payload = {
+      createdAt: new Date().toISOString(),
+      vendedor: user?.name ?? '',
+      vendedorEmail: user?.email ?? '',
+      cliente: clientName,
+      clientePhone: clientPhone,
+      estilo: selectedStyle?.name ?? '',
+      litros: totalAllLiters,
+      total: grandTotal,
+      details: {
+        addressLine: address ? `${address.logradouro}, ${address.bairro} — ${address.localidade}/${address.uf}` : null,
+        validUntil: validUntil || null,
+        freightValor: freightResult?.valor,
+        freightIsento: freightResult?.isento,
+        pricePerLiter: priceNum,
+        finalPrice,
+        discount: discountNum,
+        discountAmount,
+        deliveryDate: deliveryDate || null,
+        observations: observations || null,
+        chopperNote,
+        extraItems: extraBarrels.map(b => {
+          const style = b.styleId ? choppStyles.find(s => s.id === b.styleId) : selectedStyle
+          const tablePrice = style ? (b.liters >= 30 ? style.priceAbove30 : style.priceBelow30) : 0
+          const unitPrice = (b.styleId === selectedStyle?.id)
+            ? priceNum
+            : (typeof extraStylePrices[b.styleId] === 'number' ? extraStylePrices[b.styleId] as number : tablePrice)
+          return { liters: b.liters, unitPrice, styleName: style?.name ?? '' }
+        }),
+        clientCep,
+        mainLiters: litersNum,
+        paymentMethod,
+        installments,
+      },
+    }
+
+    let id: string
+    if (isEditing) {
+      id = initialData!.originalId!
+      await fetch(`/api/budgets/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+    } else {
+      const res = await fetch('/api/budgets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const json = await res.json()
+      id = json.id
+    }
+
+    setBudgetId(id)
+    setShowConfirmation(true)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function handleBack() {
@@ -397,7 +407,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     if (!canSubmit) return
     setIsSubmitting(true)
     await new Promise(r => setTimeout(r, 1200))
-    setSuccessBudgetId(generateBudgetId())
+    setSuccessBudgetId(budgetId)
     setIsSubmitting(false)
   }
 
@@ -475,7 +485,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
             }),
           ].join(' + ')
           const prevTitle = document.title
-          document.title = `${clientName}_${litersLabel}`
+          document.title = budgetId ?? `${clientName}_${litersLabel}`
           window.print()
           document.title = prevTitle
           setShowPdfSuccess(true)
@@ -648,20 +658,20 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <FieldLabel>Litros</FieldLabel>
-              <StyledSelect
-                value={String(liters)}
-                onChange={v => setLiters(v === '' ? '' : Number(v))}
-                options={LITER_OPTIONS}
-              />
-            </div>
-            <div>
+          <div>
+            <FieldLabel>Litros</FieldLabel>
+            <StyledSelect
+              value={String(liters)}
+              onChange={v => setLiters(v === '' ? '' : Number(v))}
+              options={LITER_OPTIONS}
+            />
+          </div>
+          {extraBarrels.length === 0 && (
+            <div className="mt-6">
               <FieldLabel>Validade do orçamento</FieldLabel>
               <DatePicker value={validUntil} onChange={setValidUntil} />
             </div>
-          </div>
+          )}
 
           {/* Extra barrels */}
           {liters !== '' && selectedStyle && (
@@ -672,7 +682,21 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                   ? (barrel.liters >= 30 ? barrelStyle.priceAbove30 : barrelStyle.priceBelow30)
                   : null
                 return (
-                  <div key={i} className="flex items-center gap-3 mt-3">
+                  <div key={i} className="mt-4">
+                  <FieldLabel>{BARREL_ORDINALS[i] ?? `${i + 2}º`} barril</FieldLabel>
+                  <div className="flex items-center gap-3 mt-2">
+                    <div className="flex-1">
+                      <StyledSelect
+                        value={barrel.liters ? String(barrel.liters) : ''}
+                        onChange={v => {
+                          const updated = [...extraBarrels]
+                          updated[i] = { ...updated[i], liters: Number(v) }
+                          setExtraBarrels(updated)
+                        }}
+                        options={LITER_OPTIONS}
+                        placeholder="Litros"
+                      />
+                    </div>
                     <div className="flex-1">
                       <StyledSelect
                         value={barrel.styleId}
@@ -690,18 +714,6 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                         placeholder="Estilo"
                       />
                     </div>
-                    <div className="flex-1">
-                      <StyledSelect
-                        value={barrel.liters ? String(barrel.liters) : ''}
-                        onChange={v => {
-                          const updated = [...extraBarrels]
-                          updated[i] = { ...updated[i], liters: Number(v) }
-                          setExtraBarrels(updated)
-                        }}
-                        options={LITER_OPTIONS}
-                        placeholder="Litros"
-                      />
-                    </div>
                     {barrel.liters > 0 && barrelPrice != null && (
                       <p className="text-[13px] flex-shrink-0" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
                         R$ {barrelPrice.toFixed(2).replace('.', ',')}/L
@@ -715,6 +727,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                       ×
                     </button>
                   </div>
+                  </div>
                 )
               })}
               <button
@@ -727,6 +740,12 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                 </span>
                 Adicionar outro barril
               </button>
+              {extraBarrels.length > 0 && (
+                <div className="mt-4">
+                  <FieldLabel>Validade do orçamento</FieldLabel>
+                  <DatePicker value={validUntil} onChange={setValidUntil} />
+                </div>
+              )}
             </div>
           )}
         </SectionCard>

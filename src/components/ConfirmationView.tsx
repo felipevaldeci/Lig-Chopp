@@ -167,11 +167,17 @@ export default function ConfirmationView({
         {/* BLOCO 2 — Produto */}
         <SectionCard number="2" title="Produto">
           {(() => {
-            const uniqueExtraStyles = [...new Set(
-              extraBarrels.filter(b => b.styleId && b.styleId !== selectedStyle.id).map(b => b.styleId)
-            )].map(id => CHOPP_STYLES.find(s => s.id === id)).filter(Boolean) as typeof CHOPP_STYLES
-            const totalLiters = liters + extraBarrels.reduce((s, b) => s + b.liters, 0)
-            const allStyles = [selectedStyle, ...uniqueExtraStyles]
+            const styleBarrelsMap = new Map<string, number>()
+            styleBarrelsMap.set(selectedStyle.id, liters)
+            for (const b of extraBarrels) {
+              if (!b.styleId || b.liters === 0) continue
+              styleBarrelsMap.set(b.styleId, (styleBarrelsMap.get(b.styleId) ?? 0) + b.liters)
+            }
+            const styleBarrels = [...styleBarrelsMap.entries()].map(([id, l]) => ({
+              style: CHOPP_STYLES.find(s => s.id === id) ?? selectedStyle,
+              liters: l,
+            }))
+            const allStyles = styleBarrels.map(sb => sb.style)
             return (
               <>
                 <div className="mb-6">
@@ -193,8 +199,12 @@ export default function ConfirmationView({
                     ))}
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-6">
-                  <ReadInput label="Litros" value={`${totalLiters} L`} />
+                <div className={styleBarrels.length === 1 ? '' : 'grid grid-cols-2 gap-6'}>
+                  {styleBarrels.map(({ style, liters: l }) => (
+                    <ReadInput key={style.id} label={style.name.replace('Germânia ', '')} value={`${l} L`} />
+                  ))}
+                </div>
+                <div className="mt-6">
                   <ReadInput label="Validade do orçamento" value={formatDateBR(validUntil)} />
                 </div>
               </>
