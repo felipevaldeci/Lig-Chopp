@@ -35,6 +35,8 @@ export default async function NovoOrcamentoPage({
         extraBarrels: (d.extraItems ?? []).map((b: { liters: number }) => ({ liters: b.liters })),
         freightValor: d.freightValor ?? null,
         freightIsento: d.freightIsento ?? null,
+        chopperIsento: d.chopperIsento ?? null,
+        chopperFeeVal: d.chopperFee ?? null,
       }
     }
   }

@@ -23,6 +23,8 @@ interface InitialData {
   extraBarrels: Array<{ liters: number; styleId: string }>
   freightValor?: number | null
   freightIsento?: boolean | null
+  chopperIsento?: boolean | null
+  chopperFeeVal?: number | null
 }
 
 interface BudgetFormProps {
@@ -178,6 +180,8 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
 
   // Block 5
   const [observations, setObservations] = useState('')
+  const [chopperIsentoOverride, setChopperIsentoOverride] = useState<boolean | null>(null)
+  const [chopperFeeInput, setChopperFeeInput] = useState('60')
 
   // Confirmation / submission
   const [showConfirmation, setShowConfirmation] = useState(false)
@@ -215,6 +219,8 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     } else if (initialData.freightIsento) {
       setFreightInput('0')
     }
+    if (initialData.chopperIsento != null) setChopperIsentoOverride(initialData.chopperIsento)
+    if (initialData.chopperFeeVal != null) setChopperFeeInput(String(initialData.chopperFeeVal).replace('.', ','))
   }, [initialData]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -285,16 +291,16 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
   }, [freightResult?.valor, freightResult?.isento]) // eslint-disable-line react-hooks/exhaustive-deps // eslint-disable-line react-hooks/exhaustive-deps
 
   const freightValue = freightInput !== '' ? parseFloat(freightInput.replace(',', '.')) || 0 : 0
-  const grandTotal = subTotal + chopperFee + freightValue
   const discountWarning = discountNum > 0 ? 'Qualquer desconto requer aprovação da Supervisão de Televendas' : ''
   const canSubmit = !!clientName && !!selectedStyle && litersNum > 0 && !!selectedStore
 
   const isDecember = new Date().getMonth() === 11
-  const chopperNote = totalAllLiters > 0
-    ? chopperFee > 0 || isDecember
-      ? 'Taxa de chopeira elétrica: R$ 60,00'
-      : 'Taxa de chopeira elétrica: isenta'
-    : null
+  const isChopperIsento = chopperIsentoOverride !== null
+    ? chopperIsentoOverride
+    : (chopperFee === 0 && !isDecember)
+  const chopperFeeNum = parseFloat(chopperFeeInput.replace(',', '.')) || 0
+  const effectiveChopperFee = totalAllLiters > 0 ? (isChopperIsento ? 0 : chopperFeeNum) : 0
+  const grandTotal = subTotal + effectiveChopperFee + freightValue
 
   const paymentLabel = paymentMethod === 'pix' ? 'PIX'
     : paymentMethod === 'debito' ? 'Cartão de Débito'
@@ -367,7 +373,8 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         discountAmount,
         deliveryDate: deliveryDate || null,
         observations: observations || null,
-        chopperNote,
+        chopperIsento: isChopperIsento,
+        chopperFee: effectiveChopperFee,
         extraItems: extraBarrels.map(b => {
           const style = b.styleId ? choppStyles.find(s => s.id === b.styleId) : selectedStyle
           const tablePrice = style ? (b.liters >= 30 ? style.priceAbove30 : style.priceBelow30) : 0
@@ -426,7 +433,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     setExtraBarrels([]); setExtraStylePrices({})
     setDiscount(0); setObservations(''); setSuccessBudgetId(null)
     setValidUntil(''); setDeliveryDate(''); setPaymentMethod('')
-    setInstallments(1); setFreightInput('')
+    setInstallments(1); setFreightInput(''); setChopperIsentoOverride(null); setChopperFeeInput('60')
     setShowConfirmation(false); setBudgetId(null)
     setShowPdfSuccess(false)
   }
@@ -482,8 +489,8 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         discountAmount={discountNum > 0 ? (litersNum * priceNum + extraSubTotalNoDiscount) * (discountNum / 100) : 0}
         extraBarrels={extraBarrels}
         observations={observations}
-        chopperNote={chopperNote}
-        chopperFee={chopperFee}
+        chopperNote={isChopperIsento ? 'Taxa de chopeira elétrica: isenta' : `Taxa de chopeira elétrica: ${formatCurrency(effectiveChopperFee)}`}
+        chopperFee={effectiveChopperFee}
         grandTotal={grandTotal}
         finalPrice={finalPrice}
         onBack={handleBack}
@@ -981,13 +988,51 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         {/* BLOCO 5 — Observações */}
         <SectionCard number="5" title="Observações">
           <div>
-            {chopperNote && (
-              <div
-                className="rounded-[8px] px-4 py-3 mb-3 text-[13px] flex items-start gap-2"
-                style={{ backgroundColor: 'rgba(143,123,101,0.12)', color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}
-              >
-                <span className="mt-0.5 flex-shrink-0">ℹ</span>
-                <span>{chopperNote}</span>
+            {totalAllLiters > 0 && (
+              <div className="mb-4">
+                <FieldLabel>Taxa de chopeira elétrica</FieldLabel>
+                <div className="flex gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setChopperIsentoOverride(false)}
+                    className="chopper-toggle flex-1 rounded-[8px] py-3 text-[14px] font-medium transition-all cursor-pointer"
+                    style={{
+                      backgroundColor: !isChopperIsento ? 'var(--laranja)' : 'transparent',
+                      color: !isChopperIsento ? 'var(--marrom)' : 'var(--marrom)',
+                      border: !isChopperIsento ? '1px solid var(--laranja)' : '1px solid var(--bege-2)',
+                      fontFamily: 'var(--font-body)',
+                    }}
+                  >
+                    Paga
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setChopperIsentoOverride(true)}
+                    className="chopper-toggle flex-1 rounded-[8px] py-3 text-[14px] font-medium transition-all cursor-pointer"
+                    style={{
+                      backgroundColor: isChopperIsento ? 'var(--laranja)' : 'transparent',
+                      color: 'var(--marrom)',
+                      border: isChopperIsento ? '1px solid var(--laranja)' : '1px solid var(--bege-2)',
+                      fontFamily: 'var(--font-body)',
+                    }}
+                  >
+                    Isenta
+                  </button>
+                </div>
+                {!isChopperIsento && (
+                  <div className="flex items-center rounded-[8px] border px-4 py-3" style={{ borderColor: 'var(--bege-2)' }}>
+                    <span className="text-[14px] mr-2" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>R$</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={chopperFeeInput}
+                      onChange={e => setChopperFeeInput(e.target.value.replace(/[^0-9,.]/, ''))}
+                      className="flex-1 bg-transparent outline-none text-[14px]"
+                      style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+                      placeholder="0,00"
+                    />
+                  </div>
+                )}
               </div>
             )}
             <FieldLabel>Informações adicionais</FieldLabel>

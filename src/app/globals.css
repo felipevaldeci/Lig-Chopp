@@ -75,6 +75,12 @@ body {
   border-color: var(--laranja) !important;
 }
 
+.chopper-toggle:hover {
+  background-color: var(--laranja) !important;
+  color: var(--marrom) !important;
+  border-color: var(--laranja) !important;
+}
+
 .btn-voltar:hover {
   background-color: var(--vermelho) !important;
   color: var(--bege) !important;
