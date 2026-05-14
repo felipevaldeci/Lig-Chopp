@@ -15,6 +15,8 @@ interface ConfirmationViewProps {
   selectedStore: Store & { distanciaKm: number }
   address: { logradouro: string; bairro: string; localidade: string; uf: string } | null
   freightResult: FreightResult | null
+  freightValue: number
+  freightInput: string
   deliveryDate: string
   pricePerLiter: number
   paymentMethod: string
@@ -23,6 +25,7 @@ interface ConfirmationViewProps {
   extraBarrels: Array<{ liters: number; styleId: string }>
   observations: string
   chopperNote: string | null
+  chopperFee?: number
   grandTotal: number
   finalPrice: number
   onBack: () => void
@@ -99,6 +102,8 @@ export default function ConfirmationView({
   selectedStore,
   address,
   freightResult,
+  freightValue,
+  freightInput,
   deliveryDate,
   pricePerLiter,
   paymentMethod,
@@ -107,6 +112,7 @@ export default function ConfirmationView({
   extraBarrels,
   observations,
   chopperNote,
+  chopperFee,
   grandTotal,
   finalPrice,
   onBack,
@@ -127,7 +133,7 @@ export default function ConfirmationView({
           styleName={selectedStyle.name}
           liters={liters}
           paymentMethod={paymentMethod}
-          freightValor={freightResult?.valor}
+          freightValor={freightInput !== '' ? freightValue : freightResult?.valor}
           freightIsento={freightResult?.isento}
           pricePerLiter={pricePerLiter}
           finalPrice={finalPrice}
@@ -143,6 +149,7 @@ export default function ConfirmationView({
           deliveryDate={deliveryDate}
           validUntil={validUntil}
           chopperNote={chopperNote}
+          chopperFee={chopperFee}
         />
       </div>
 

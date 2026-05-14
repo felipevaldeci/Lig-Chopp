@@ -27,6 +27,7 @@ export interface BudgetPrintLayoutProps {
   deliveryDate?: string
   validUntil?: string
   chopperNote?: string | null
+  chopperFee?: number
 }
 
 const NOTES = [
@@ -152,6 +153,7 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
             {extraItems.map((item, i) => (
               <p key={i} style={rowStyle}>{item.liters}L {item.styleName ?? p.styleName}</p>
             ))}
+            {p.chopperFee != null && <p style={rowStyle}>Taxa de chopeira elétrica</p>}
             {showFreight && <p style={rowStyle}>Frete</p>}
             {hasDiscount && <p style={{ ...rowStyle, color: C.vermelho }}>Desconto {p.discount}%</p>}
           </div>
@@ -173,6 +175,9 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
               const v = item.liters * item.unitPrice * (1 - (p.discount ?? 0) / 100)
               return v > 0 ? <p key={i} style={rowValueStyle}>{fmt(v)}</p> : null
             })}
+            {p.chopperFee != null && (
+              <p style={rowValueStyle}>{fmt(p.chopperFee)}</p>
+            )}
             {showFreight && (
               <p style={rowValueStyle}>
                 {p.freightIsento ? 'Isento' : fmt(p.freightValor ?? 0)}
@@ -239,11 +244,6 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
 
       {/* Notas */}
       <div style={{ padding: '0 32px' }}>
-        {p.chopperNote && (
-          <p style={{ fontSize: 10, color: C.marrom, marginBottom: 3, marginTop: 0, lineHeight: 1.4 }}>
-            *{p.chopperNote}
-          </p>
-        )}
         {NOTES.map(note => (
           <p key={note} style={{ fontSize: 10, color: C.marrom, marginBottom: 3, marginTop: 0, lineHeight: 1.4 }}>
             {note}

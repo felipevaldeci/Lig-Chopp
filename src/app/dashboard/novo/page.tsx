@@ -33,6 +33,8 @@ export default async function NovoOrcamentoPage({
         paymentMethod: d.paymentMethod ?? '',
         installments: d.installments ?? 1,
         extraBarrels: (d.extraItems ?? []).map((b: { liters: number }) => ({ liters: b.liters })),
+        freightValor: d.freightValor ?? null,
+        freightIsento: d.freightIsento ?? null,
       }
     }
   }

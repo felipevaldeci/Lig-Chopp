@@ -21,6 +21,8 @@ interface InitialData {
   paymentMethod: string
   installments: number
   extraBarrels: Array<{ liters: number; styleId: string }>
+  freightValor?: number | null
+  freightIsento?: boolean | null
 }
 
 interface BudgetFormProps {
@@ -208,6 +210,11 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     setPaymentMethod(initialData.paymentMethod as 'pix' | 'debito' | 'credito' | '')
     setInstallments(initialData.installments)
     setExtraBarrels(initialData.extraBarrels)
+    if (initialData.freightValor != null) {
+      setFreightInput(String(initialData.freightValor).replace('.', ','))
+    } else if (initialData.freightIsento) {
+      setFreightInput('0')
+    }
   }, [initialData]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -269,12 +276,13 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     : null
 
   useEffect(() => {
+    if (initialData?.freightValor != null) return
     if (freightResult) {
       setFreightInput(freightResult.isento ? '0' : freightResult.valor.toFixed(2).replace('.', ','))
     } else {
       setFreightInput('')
     }
-  }, [freightResult?.valor, freightResult?.isento]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [freightResult?.valor, freightResult?.isento]) // eslint-disable-line react-hooks/exhaustive-deps // eslint-disable-line react-hooks/exhaustive-deps
 
   const freightValue = freightInput !== '' ? parseFloat(freightInput.replace(',', '.')) || 0 : 0
   const grandTotal = subTotal + chopperFee + freightValue
@@ -351,8 +359,8 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
       details: {
         addressLine: address ? `${address.logradouro}, ${address.bairro} — ${address.localidade}/${address.uf}` : null,
         validUntil: validUntil || null,
-        freightValor: freightResult?.valor,
-        freightIsento: freightResult?.isento,
+        freightValor: freightInput !== '' ? freightValue : null,
+        freightIsento: freightResult?.isento ?? false,
         pricePerLiter: priceNum,
         finalPrice,
         discount: discountNum,
@@ -465,6 +473,8 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         selectedStore={selectedStore}
         address={cepResult?.address ?? null}
         freightResult={freightResult}
+        freightValue={freightValue}
+        freightInput={freightInput}
         deliveryDate={deliveryDate}
         pricePerLiter={priceNum}
         paymentMethod={paymentLabel}
@@ -473,6 +483,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         extraBarrels={extraBarrels}
         observations={observations}
         chopperNote={chopperNote}
+        chopperFee={chopperFee}
         grandTotal={grandTotal}
         finalPrice={finalPrice}
         onBack={handleBack}
@@ -613,8 +624,9 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                     const isHovered = hoveredStyle === style.id
                     return (
                       <button
+                        type="button"
                         key={style.id}
-                        onClick={() => setSelectedStyle(isSelected ? null : style)}
+                        onClick={() => { if (!isSelected) setSelectedStyle(style) }}
                         onMouseEnter={() => setHoveredStyle(style.id)}
                         onMouseLeave={() => setHoveredStyle(null)}
                         className="flex-none w-[194px] h-[127px] rounded-[12px] border transition-all cursor-pointer flex flex-col items-center justify-center gap-3"
