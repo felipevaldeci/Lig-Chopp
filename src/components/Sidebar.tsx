@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
 
 interface SidebarProps {
   user: { name: string; email: string; role: string }
@@ -14,9 +15,9 @@ const NAV = {
     { href: '/dashboard/meus', label: 'Meus Orçamentos', icon: 'doc'  as NavIcon },
   ],
   coordenador: [
-    { href: '/dashboard/coordenador', label: 'Todos os Orçamentos', icon: 'doc'  as NavIcon },
     { href: '/dashboard/novo',        label: 'Novo Orçamento',       icon: 'plus' as NavIcon },
     { href: '/dashboard/meus',        label: 'Meus Orçamentos',      icon: 'doc'  as NavIcon },
+    { href: '/dashboard/coordenador', label: 'Todos os Orçamentos',  icon: 'doc'  as NavIcon },
   ],
 }
 
@@ -36,10 +37,51 @@ function PlusIcon() {
   )
 }
 
+function MoonIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  )
+}
+
+function SunIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  )
+}
+
 export default function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const nav = NAV[user.role as keyof typeof NAV] ?? NAV.vendedor
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    setIsDark(document.documentElement.dataset.theme === 'dark')
+  }, [])
+
+  function toggleTheme() {
+    const next = !isDark
+    setIsDark(next)
+    if (next) {
+      document.documentElement.dataset.theme = 'dark'
+      localStorage.setItem('lig-chopp-theme', 'dark')
+    } else {
+      delete document.documentElement.dataset.theme
+      localStorage.removeItem('lig-chopp-theme')
+    }
+  }
 
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -56,7 +98,7 @@ export default function Sidebar({ user }: SidebarProps) {
   return (
     <aside
       className="fixed left-0 top-0 h-screen w-[241px] flex flex-col z-30"
-      style={{ backgroundColor: 'var(--vermelho)' }}
+      style={{ backgroundColor: '#c92b1f' }}
     >
       {/* User section */}
       <div className="flex flex-col items-center pt-[36px] pb-[24px] px-7">
@@ -66,14 +108,14 @@ export default function Sidebar({ user }: SidebarProps) {
         >
           <span
             className="text-sm font-bold"
-            style={{ color: 'var(--marrom)', fontFamily: 'var(--font-display)' }}
+            style={{ color: '#6c2d01', fontFamily: 'var(--font-display)' }}
           >
             {initials}
           </span>
         </div>
         <p
           className="text-[16px] font-medium leading-[26px]"
-          style={{ color: 'var(--bege)', fontFamily: 'var(--font-body)' }}
+          style={{ color: '#fee6ce', fontFamily: 'var(--font-body)' }}
         >
           {user.name}
         </p>
@@ -95,14 +137,14 @@ export default function Sidebar({ user }: SidebarProps) {
               style={
                 isActive
                   ? {
-                      backgroundColor: 'var(--laranja)',
-                      color: 'var(--marrom)',
+                      backgroundColor: '#f79946',
+                      color: '#6c2d01',
                       fontFamily: 'var(--font-body)',
-                      border: '1px solid var(--laranja)',
+                      border: '1px solid #f79946',
                     }
                   : {
-                      border: '1px solid var(--bege)',
-                      color: 'var(--bege)',
+                      border: '1px solid #fee6ce',
+                      color: '#fee6ce',
                       fontFamily: 'var(--font-body)',
                     }
               }
@@ -114,13 +156,57 @@ export default function Sidebar({ user }: SidebarProps) {
         })}
       </nav>
 
+      {/* Theme toggle */}
+      <div className="mx-4 mb-3 flex justify-center">
+        <button
+          onClick={toggleTheme}
+          style={{
+            width: 72,
+            height: 28,
+            borderRadius: 14,
+            backgroundColor: 'transparent',
+            border: '1px solid #fee6ce',
+            cursor: 'pointer',
+            position: 'relative',
+            flexShrink: 0,
+            color: '#fee6ce',
+          }}
+        >
+          {/* Icon — opposite side from the circle */}
+          <span style={{
+            position: 'absolute',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            left: isDark ? 'auto' : 7,
+            right: isDark ? 7 : 'auto',
+            display: 'flex',
+            pointerEvents: 'none',
+          }}>
+            {isDark ? <MoonIcon /> : <SunIcon />}
+          </span>
+          {/* Sliding circle */}
+          <div style={{
+            width: 20,
+            height: 20,
+            borderRadius: '50%',
+            backgroundColor: '#fee6ce',
+            position: 'absolute',
+            top: 3,
+            left: 3,
+            transform: `translateX(${isDark ? 0 : 44}px)`,
+            transition: 'transform 0.3s ease',
+            pointerEvents: 'none',
+          }} />
+        </button>
+      </div>
+
       {/* Logout */}
       <button
         onClick={handleLogout}
         className="sidebar-sair mx-4 mb-8 px-4 py-2 rounded-[12px] text-[16px] font-medium text-center transition-all cursor-pointer"
         style={{
-          border: '1px solid var(--bege)',
-          color: 'var(--bege)',
+          border: '1px solid #fee6ce',
+          color: '#fee6ce',
           fontFamily: 'var(--font-body)',
         }}
       >

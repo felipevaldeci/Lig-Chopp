@@ -22,7 +22,8 @@ interface ConfirmationViewProps {
   paymentMethod: string
   discount: number
   discountAmount: number
-  extraBarrels: Array<{ liters: number; styleId: string }>
+  mainQuantity: number
+  extraBarrels: Array<{ liters: number; styleId: string; quantity: number }>
   observations: string
   chopperNote: string | null
   chopperFee?: number
@@ -61,7 +62,7 @@ function SectionCard({ number, title, children }: { number: string; title: strin
         </span>
       </div>
       <div className="rounded-[24px] px-6 pt-10 pb-8" style={{ backgroundColor: 'var(--bege-claro)' }}>
-        <h2 className="text-[28px] leading-9 mb-6" style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-display)' }}>
+        <h2 className="text-[28px] leading-9 mb-6" style={{ color: 'var(--cor-titulo)', fontFamily: 'var(--font-display)' }}>
           {title}
         </h2>
         {children}
@@ -73,7 +74,7 @@ function SectionCard({ number, title, children }: { number: string; title: strin
 function ReadInput({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-[16px] font-medium leading-[26px] mb-2" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+      <p className="text-[16px] font-medium leading-[26px] mb-2" style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}>
         {label}
       </p>
       <div
@@ -82,7 +83,7 @@ function ReadInput({ label, value }: { label: string; value: string }) {
       >
         <span
           className="text-[14px] leading-[22px]"
-          style={{ color: value ? 'var(--marrom)' : 'var(--bege-2)', fontFamily: 'var(--font-body)' }}
+          style={{ color: value ? 'var(--text-card)' : 'var(--text-card-2)', fontFamily: 'var(--font-body)' }}
         >
           {value || '—'}
         </span>
@@ -109,6 +110,7 @@ export default function ConfirmationView({
   paymentMethod,
   discount,
   discountAmount,
+  mainQuantity,
   extraBarrels,
   observations,
   chopperNote,
@@ -141,10 +143,11 @@ export default function ConfirmationView({
           observations={observations}
           discount={discount}
           discountAmount={discountAmount}
+          mainQuantity={mainQuantity}
           extraItems={extraBarrels.map(b => {
             const style = (b.styleId ? CHOPP_STYLES.find(s => s.id === b.styleId) : null) ?? selectedStyle
             const unitPrice = b.liters >= 30 ? style.priceAbove30 : style.priceBelow30
-            return { liters: b.liters, unitPrice, styleName: style.name }
+            return { liters: b.liters, unitPrice, styleName: style.name, quantity: b.quantity ?? 1 }
           })}
           deliveryDate={deliveryDate}
           validUntil={validUntil}
@@ -158,7 +161,7 @@ export default function ConfirmationView({
 
         {/* Título da página */}
         <div className="mb-8">
-          <h1 className="text-[36px] leading-[56px]" style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-[36px] leading-[56px]" style={{ color: '#f79946', fontFamily: 'var(--font-display)' }}>
             Confira os dados
           </h1>
         </div>
@@ -175,10 +178,11 @@ export default function ConfirmationView({
         <SectionCard number="2" title="Produto">
           {(() => {
             const styleBarrelsMap = new Map<string, number>()
-            styleBarrelsMap.set(selectedStyle.id, liters)
+            styleBarrelsMap.set(selectedStyle.id, liters * mainQuantity)
             for (const b of extraBarrels) {
               if (!b.styleId || b.liters === 0) continue
-              styleBarrelsMap.set(b.styleId, (styleBarrelsMap.get(b.styleId) ?? 0) + b.liters)
+              const q = b.quantity ?? 1
+              styleBarrelsMap.set(b.styleId, (styleBarrelsMap.get(b.styleId) ?? 0) + q * b.liters)
             }
             const styleBarrels = [...styleBarrelsMap.entries()].map(([id, l]) => ({
               style: CHOPP_STYLES.find(s => s.id === id) ?? selectedStyle,
@@ -188,7 +192,7 @@ export default function ConfirmationView({
             return (
               <>
                 <div className="mb-6">
-                  <p className="text-[16px] font-medium leading-[26px] mb-2" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+                  <p className="text-[16px] font-medium leading-[26px] mb-2" style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}>
                     Estilo de chopp
                   </p>
                   <div className="flex flex-wrap gap-4">
@@ -238,17 +242,17 @@ export default function ConfirmationView({
 
           {selectedStore && (
             <div className="rounded-[16px] px-6 py-5" style={{ backgroundColor: 'var(--laranja)' }}>
-              <p className="text-[16px] font-medium" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+              <p className="text-[16px] font-medium" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                 {selectedStore.name}
               </p>
-              <p className="text-[14px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+              <p className="text-[14px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                 {selectedStore.distanciaKm} km de distância
               </p>
               <div className="flex items-center gap-2 mt-1">
                 <svg width="12" height="15" viewBox="0 0 14 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5C5.62 9.5 4.5 8.38 4.5 7S5.62 4.5 7 4.5 9.5 5.62 9.5 7 8.38 9.5 7 9.5z" fill="var(--marrom)"/>
+                  <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5C5.62 9.5 4.5 8.38 4.5 7S5.62 4.5 7 4.5 9.5 5.62 9.5 7 8.38 9.5 7 9.5z" fill="#6c2d01"/>
                 </svg>
-                <p className="text-[14px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+                <p className="text-[14px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                   {selectedStore.address} — {selectedStore.city}/{selectedStore.state}
                 </p>
               </div>
@@ -270,17 +274,17 @@ export default function ConfirmationView({
           {discountNum > 0 && (
             <div
               className="rounded-[12px] px-4 py-3 mb-6 text-[14px]"
-              style={{ backgroundColor: 'rgba(247,153,70,0.15)', border: '1px solid var(--laranja)', color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+              style={{ backgroundColor: 'rgba(247,153,70,0.15)', border: '1px solid var(--laranja)', color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}
             >
               ⚠ Desconto aplicado — aprovação da Supervisão requerida
             </div>
           )}
 
           <div className="rounded-[20px] px-6 py-6 flex items-center justify-between" style={{ backgroundColor: 'var(--laranja)' }}>
-            <p className="text-[16px] font-medium" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+            <p className="text-[16px] font-medium" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
               Valor total do orçamento
             </p>
-            <p className="text-[36px] leading-[56px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-display)' }}>
+            <p className="text-[36px] leading-[56px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-display)' }}>
               {formatCurrency(grandTotal)}
             </p>
           </div>
@@ -297,7 +301,7 @@ export default function ConfirmationView({
               <span>{chopperNote}</span>
             </div>
           )}
-          <p className="text-[16px] font-medium leading-[26px] mb-2" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+          <p className="text-[16px] font-medium leading-[26px] mb-2" style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}>
             Informações adicionais
           </p>
           <div
@@ -306,7 +310,7 @@ export default function ConfirmationView({
           >
             <p
               className="text-[14px] leading-[22px] whitespace-pre-wrap"
-              style={{ color: observations ? 'var(--marrom)' : 'var(--bege-2)', fontFamily: 'var(--font-body)' }}
+              style={{ color: observations ? 'var(--text-card)' : 'var(--text-card-2)', fontFamily: 'var(--font-body)' }}
             >
               {observations || 'Nenhuma observação adicionada.'}
             </p>
@@ -330,11 +334,7 @@ export default function ConfirmationView({
         className="no-print fixed bottom-0 left-[241px] right-0 px-7 py-4 flex items-center justify-between z-10"
         style={{ backgroundColor: 'var(--bege-claro)', borderTop: '1px solid var(--bege-3)' }}
       >
-        <p className="text-[14px]" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
-          *Este orçamento será automaticamente encaminhado para o RD Station
-        </p>
-
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 ml-auto">
           <button
             onClick={onBack}
             className="btn-voltar flex items-center gap-2 rounded-[12px] px-6 py-2 text-[16px] font-medium transition-all cursor-pointer"
@@ -351,8 +351,8 @@ export default function ConfirmationView({
             onClick={onGeneratePdf}
             className="btn-laranja flex items-center gap-3 rounded-[12px] px-6 py-2 text-[16px] font-medium transition-all cursor-pointer"
             style={{
-              backgroundColor: 'var(--laranja)',
-              color: 'var(--marrom)',
+              backgroundColor: '#f79946',
+              color: '#6c2d01',
               fontFamily: 'var(--font-body)',
             }}
           >

@@ -251,7 +251,7 @@ export default function MeusOrcamentos({ userEmail }: { userEmail: string }) {
                     return `${main + extra}L`
                   })()}
                 </td>
-                <td className="px-4 py-3 text-[14px] text-right font-medium" style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-body)' }}>
+                <td className="px-4 py-3 text-[14px] text-right font-medium" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
                   {formatCurrency(budget.total)}
                 </td>
                 <td className="px-4 py-3 text-center">
@@ -271,7 +271,7 @@ export default function MeusOrcamentos({ userEmail }: { userEmail: string }) {
                     <button
                       onClick={() => setSelectedBudget(budget)}
                       className="btn-ver text-[13px] font-medium px-3 py-1 rounded-[8px] cursor-pointer transition-all"
-                      style={{ backgroundColor: 'var(--laranja)', color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+                      style={{ backgroundColor: '#f79946', color: '#6c2d01', fontFamily: 'var(--font-body)' }}
                     >
                       Ver →
                     </button>
@@ -281,8 +281,8 @@ export default function MeusOrcamentos({ userEmail }: { userEmail: string }) {
                       onMouseLeave={() => setEditHovered(null)}
                       className="flex items-center gap-1 text-[13px] font-medium px-3 py-1 rounded-[8px] cursor-pointer transition-all"
                       style={{
-                        border: editHovered === budget.id ? '1px solid var(--laranja)' : '1px solid #6C2D01',
-                        color: editHovered === budget.id ? 'var(--marrom)' : '#6C2D01',
+                        border: editHovered === budget.id ? '1px solid var(--laranja)' : '1px solid var(--marrom)',
+                        color: 'var(--marrom)',
                         backgroundColor: editHovered === budget.id ? 'var(--laranja)' : 'transparent',
                         fontFamily: 'var(--font-body)',
                       }}

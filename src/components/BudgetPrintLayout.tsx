@@ -23,7 +23,8 @@ export interface BudgetPrintLayoutProps {
   observations?: string
   discount?: number
   discountAmount?: number
-  extraItems?: Array<{ liters: number; unitPrice: number; styleName?: string }>
+  extraItems?: Array<{ liters: number; unitPrice: number; styleName?: string; quantity?: number }>
+  mainQuantity?: number
   deliveryDate?: string
   validUntil?: string
   chopperNote?: string | null
@@ -51,7 +52,8 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
   const today = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
 
   const effectivePrice = p.finalPrice ?? p.pricePerLiter
-  const choppSubtotal = effectivePrice != null ? p.liters * effectivePrice : null
+  const effectiveMainQty = p.mainQuantity ?? 1
+  const choppSubtotal = effectivePrice != null ? p.liters * effectiveMainQty * effectivePrice : null
   const showFreight = p.freightIsento != null || p.freightValor != null
   const hasDiscount = (p.discount ?? 0) > 0 && (p.discountAmount ?? 0) > 0
   const extraItems = p.extraItems ?? []
@@ -149,9 +151,9 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
             flexDirection: 'column',
             alignItems: 'center',
           }}>
-            <p style={rowStyle}>{p.liters}L {p.styleName}</p>
+            <p style={rowStyle}>{effectiveMainQty > 1 ? `${effectiveMainQty}× ` : ''}{p.liters}L {p.styleName}</p>
             {extraItems.map((item, i) => (
-              <p key={i} style={rowStyle}>{item.liters}L {item.styleName ?? p.styleName}</p>
+              <p key={i} style={rowStyle}>{(item.quantity ?? 1) > 1 ? `${item.quantity}× ` : ''}{item.liters}L {item.styleName ?? p.styleName}</p>
             ))}
             {p.chopperFee != null && <p style={rowStyle}>Taxa de chopeira elétrica</p>}
             {showFreight && <p style={rowStyle}>Frete</p>}
@@ -172,7 +174,7 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
               <p style={rowValueStyle}>{fmt(choppSubtotal)}</p>
             )}
             {extraItems.map((item, i) => {
-              const v = item.liters * item.unitPrice * (1 - (p.discount ?? 0) / 100)
+              const v = (item.quantity ?? 1) * item.liters * item.unitPrice * (1 - (p.discount ?? 0) / 100)
               return v > 0 ? <p key={i} style={rowValueStyle}>{fmt(v)}</p> : null
             })}
             {p.chopperFee != null && (
@@ -190,7 +192,7 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
         </div>
 
         {/* Pagamento/Entrega + Total na mesma linha */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, marginBottom: 36 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, marginBottom: 0 }}>
           <div>
             <p style={{ fontSize: 13, color: C.marrom, margin: 0, marginBottom: 3 }}>
               <span style={{ fontWeight: 700 }}>Pagamento: </span>A combinar
@@ -239,7 +241,7 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
         </div>
       )}
 
-      {/* Separador inferior */}
+      {/* Separador superior das notas */}
       <div style={{ borderTop: '1px solid #F5D9BD', margin: '16px 32px' }} />
 
       {/* Notas */}
@@ -250,6 +252,12 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
           </p>
         ))}
       </div>
+
+      {/* Separador + aviso */}
+      <div style={{ borderTop: '1px solid #F5D9BD', margin: '16px 32px 0' }} />
+      <p style={{ margin: '16px 32px 0', fontSize: 11, color: C.marrom, fontWeight: 700, fontFamily: 'var(--font-body, sans-serif)' }}>
+        Este orçamento não garante disponibilidade
+      </p>
 
     </div>
   )

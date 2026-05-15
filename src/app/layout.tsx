@@ -8,10 +8,11 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className="h-full">
+    <html lang="pt-BR" className="h-full" suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="https://use.typekit.net/vlr1ohk.css" />
         <link rel="stylesheet" href="https://use.typekit.net/yzj3pit.css" />
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{if(localStorage.getItem('lig-chopp-theme')==='dark')document.documentElement.dataset.theme='dark';}catch(e){}})();` }} />
       </head>
       <body className="min-h-full antialiased">{children}</body>
     </html>

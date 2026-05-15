@@ -276,7 +276,7 @@ export default function CoordenadorPage() {
                     return `${main + extra}L`
                   })()}
                 </td>
-                <td className="px-4 py-3 text-[14px] text-right font-medium" style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-body)' }}>
+                <td className="px-4 py-3 text-[14px] text-right font-medium" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
                   {formatCurrency(budget.total)}
                 </td>
                 <td className="px-4 py-3 text-center whitespace-nowrap">
@@ -296,7 +296,7 @@ export default function CoordenadorPage() {
                     <button
                       onClick={() => setSelectedBudget(budget)}
                       className="btn-ver text-[13px] font-medium px-3 py-1 rounded-[8px] cursor-pointer transition-all whitespace-nowrap"
-                      style={{ backgroundColor: 'var(--laranja)', color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+                      style={{ backgroundColor: '#f79946', color: '#6c2d01', fontFamily: 'var(--font-body)' }}
                     >
                       Ver →
                     </button>
@@ -307,8 +307,8 @@ export default function CoordenadorPage() {
                       title="Editar"
                       className="w-[30px] h-[30px] flex items-center justify-center rounded-[8px] cursor-pointer transition-all flex-shrink-0"
                       style={{
-                        border: editHovered === budget.id ? '1px solid var(--laranja)' : '1px solid #6C2D01',
-                        color: editHovered === budget.id ? 'var(--marrom)' : '#6C2D01',
+                        border: editHovered === budget.id ? '1px solid var(--laranja)' : '1px solid var(--marrom)',
+                        color: 'var(--marrom)',
                         backgroundColor: editHovered === budget.id ? 'var(--laranja)' : 'transparent',
                       }}
                     >

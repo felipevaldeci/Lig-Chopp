@@ -15,6 +15,7 @@
 }
 
 :root {
+  color-scheme: light;
   --font-display: "bodega-sans", sans-serif;
   --font-body: "gotham", sans-serif;
 
@@ -26,6 +27,35 @@
   --bege-claro: #f5d9bd;
   --dourado: #ddbb52;
   --bege-3: #dec3a6;
+  --cor-titulo: var(--vermelho);
+  --text-card: var(--bege-2);
+  --text-card-2: var(--bege-2);
+  --style-btn-active-bg: rgba(108,45,1,0.06);
+  --style-btn-selected-border: var(--bege-2);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bege:       #1a1008;
+  --bege-claro: #251609;
+  --bege-2:     #a08a74;
+  --bege-3:     #3a2415;
+  --vermelho:   #e03d30;
+  --marrom:     #f0c8a0;
+  --laranja:    #e88530;
+  --dourado:    #c9a940;
+  --cor-titulo: #F79946;
+  --text-card:  #8f7b65;
+  --text-card-2: #8f7b65;
+  --style-btn-active-bg: rgba(254,230,206,0.12);
+  --style-btn-selected-border: #fee6ce;
+}
+
+*, *::before, *::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
+}
+@media print {
+  *, *::before, *::after { transition: none !important; }
 }
 
 body {
@@ -52,33 +82,43 @@ body {
   border-color: var(--laranja) !important;
 }
 
-.sidebar-nav-inactive:hover {
-  background-color: var(--laranja) !important;
-  color: var(--marrom) !important;
-  border-color: var(--laranja) !important;
-}
 
+.sidebar-sair:hover,
+.sidebar-nav-btn:hover,
+.sidebar-nav-inactive:hover,
 .sidebar-nav-active:hover {
-  background-color: var(--laranja) !important;
-  color: var(--marrom) !important;
-}
-
-.sidebar-nav-btn:hover {
-  background-color: var(--laranja) !important;
-  color: var(--marrom) !important;
-  border-color: var(--laranja) !important;
-}
-
-.sidebar-sair:hover {
-  background-color: var(--laranja) !important;
-  color: var(--marrom) !important;
-  border-color: var(--laranja) !important;
+  background-color: #f79946 !important;
+  color: #6c2d01 !important;
+  border-color: #f79946 !important;
 }
 
 .chopper-toggle:hover {
-  background-color: var(--laranja) !important;
-  color: var(--marrom) !important;
-  border-color: var(--laranja) !important;
+  background-color: #f79946 !important;
+  color: #6c2d01 !important;
+  border-color: #f79946 !important;
+}
+
+.chopper-inactive {
+  color: #6c2d01;
+}
+[data-theme="dark"] .chopper-inactive {
+  color: #fee6ce !important;
+}
+
+[data-theme="dark"] .btn-seta {
+  background-color: #f79946 !important;
+  color: #6c2d01 !important;
+}
+
+[data-theme="dark"] .style-chopp-selected {
+  border-color: #fee6ce !important;
+}
+
+.select-option:hover {
+  background-color: rgba(108,45,1,0.06) !important;
+}
+[data-theme="dark"] .select-option:hover {
+  background-color: #402f21 !important;
 }
 
 .btn-voltar:hover {
@@ -108,8 +148,9 @@ input[type="date"] {
   color-scheme: light;
 }
 
-/* Observations placeholder */
-.obs-textarea::placeholder { color: #8F7B65; }
+/* Card placeholders — all modes */
+input::placeholder,
+textarea::placeholder { color: var(--text-card-2); }
 
 /* Select fields hover */
 .field-select-wrapper {
@@ -119,6 +160,10 @@ input[type="date"] {
   border-color: var(--marrom) !important;
   background-color: rgba(108,45,1,0.06);
 }
+[data-theme="dark"] .field-select-wrapper:hover {
+  background-color: #402f21 !important;
+  border-color: var(--bege-2) !important;
+}
 
 /* Date input fields hover */
 .date-field-wrapper {
@@ -126,6 +171,10 @@ input[type="date"] {
 }
 .date-field-wrapper:hover {
   border-color: var(--marrom) !important;
+}
+[data-theme="dark"] .date-field-wrapper:hover {
+  border-color: var(--bege-2) !important;
+  background-color: #402f21 !important;
 }
 
 /* Hide number input spinners */
@@ -152,6 +201,23 @@ input[type="number"] { -moz-appearance: textfield; }
 
   .no-print   { display: none !important; }
   .print-only { display: block !important; }
+
+  html, [data-theme="dark"] {
+    color-scheme: light !important;
+    --bege:       #fee6ce !important;
+    --bege-claro: #f5d9bd !important;
+    --bege-2:     #8f7b65 !important;
+    --bege-3:     #dec3a6 !important;
+    --vermelho:   #c92b1f !important;
+    --marrom:     #6c2d01 !important;
+    --laranja:    #f79946 !important;
+    --dourado:    #ddbb52 !important;
+  }
+
+  body {
+    background-color: #fee6ce !important;
+    color: #6c2d01 !important;
+  }
 
   @page {
     margin: 0;

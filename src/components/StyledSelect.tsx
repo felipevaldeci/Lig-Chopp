@@ -29,16 +29,16 @@ export default function StyledSelect({
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between rounded-[8px] border px-4 py-3 cursor-pointer text-[14px] leading-[22px] transition-colors"
+        className="field-select-wrapper w-full flex items-center justify-between rounded-[8px] border px-4 py-3 cursor-pointer text-[14px] leading-[22px] transition-colors"
         style={{
           borderColor: open ? 'var(--marrom)' : 'var(--bege-2)',
           backgroundColor: open ? 'rgba(108,45,1,0.06)' : 'transparent',
-          color: selected ? 'var(--marrom)' : 'var(--bege-2)',
+          color: selected ? 'var(--text-card)' : 'var(--text-card-2)',
           fontFamily: 'var(--font-body)',
         }}
       >
         <span>{selected?.label ?? placeholder}</span>
-        <span className="text-[10px]" style={{ color: 'var(--bege-2)' }}>▾</span>
+        <span className="text-[10px]" style={{ color: 'var(--text-card-2)' }}>▾</span>
       </button>
 
       {open && (
@@ -54,14 +54,12 @@ export default function StyledSelect({
           <button
             type="button"
             onClick={() => { onChange(''); setOpen(false) }}
-            className="w-full text-left px-4 py-2.5 text-[14px] cursor-pointer transition-colors"
+            className="select-option w-full text-left px-4 py-2.5 text-[14px] cursor-pointer transition-colors"
             style={{
-              color: 'var(--bege-2)',
+              color: 'var(--text-card-2)',
               fontFamily: 'var(--font-body)',
               backgroundColor: !value ? 'rgba(108,45,1,0.06)' : 'transparent',
             }}
-            onMouseEnter={e => { if (value) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(108,45,1,0.04)' }}
-            onMouseLeave={e => { if (value) (e.currentTarget as HTMLElement).style.backgroundColor = 'transparent' }}
           >
             {placeholder}
           </button>
@@ -70,14 +68,12 @@ export default function StyledSelect({
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false) }}
-              className="w-full text-left px-4 py-2.5 text-[14px] cursor-pointer transition-colors"
+              className="select-option w-full text-left px-4 py-2.5 text-[14px] cursor-pointer transition-colors"
               style={{
-                color: 'var(--marrom)',
+                color: 'var(--text-card)',
                 fontFamily: 'var(--font-body)',
                 backgroundColor: opt.value === value ? 'rgba(108,45,1,0.1)' : 'transparent',
               }}
-              onMouseEnter={e => { if (opt.value !== value) (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(108,45,1,0.06)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.backgroundColor = opt.value === value ? 'rgba(108,45,1,0.1)' : 'transparent' }}
             >
               {opt.label}
             </button>

@@ -13,6 +13,7 @@ interface InitialData {
   clientCep: string
   styleName: string
   mainLiters: number
+  mainQuantity?: number
   pricePerLiter: number
   discount: number
   observations: string
@@ -20,7 +21,7 @@ interface InitialData {
   deliveryDate: string
   paymentMethod: string
   installments: number
-  extraBarrels: Array<{ liters: number; styleId: string }>
+  extraBarrels: Array<{ liters: number; styleId: string; quantity?: number }>
   freightValor?: number | null
   freightIsento?: boolean | null
   chopperIsento?: boolean | null
@@ -62,6 +63,11 @@ const LITER_OPTIONS = [
 
 const BARREL_ORDINALS = ['Segundo', 'Terceiro', 'Quarto', 'Quinto', 'Sexto', 'Sétimo']
 
+const QUANTITY_OPTIONS = Array.from({ length: 20 }, (_, i) => ({
+  value: String(i + 1),
+  label: String(i + 1),
+}))
+
 const PAYMENT_OPTIONS = [
   { value: 'pix',     label: 'PIX' },
   { value: 'debito',  label: 'Cartão de Débito' },
@@ -94,7 +100,7 @@ function SectionCard({ number, title, children }: { number: string; title: strin
         </span>
       </div>
       <div className="rounded-[24px] px-6 pt-10 pb-8" style={{ backgroundColor: 'var(--bege-claro)' }}>
-        <h2 className="text-[28px] leading-9 mb-6" style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-display)' }}>
+        <h2 className="text-[28px] leading-9 mb-6" style={{ color: 'var(--cor-titulo)', fontFamily: 'var(--font-display)' }}>
           {title}
         </h2>
         {children}
@@ -105,7 +111,7 @@ function SectionCard({ number, title, children }: { number: string; title: strin
 
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[16px] font-medium leading-[26px] mb-2" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+    <p className="text-[16px] font-medium leading-[26px] mb-2" style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}>
       {children}
     </p>
   )
@@ -134,7 +140,7 @@ function FieldInput({
         placeholder={placeholder}
         maxLength={maxLength}
         className="w-full bg-transparent outline-none text-[14px] leading-[22px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-        style={{ color: value ? 'var(--marrom)' : 'var(--bege-2)', fontFamily: 'var(--font-body)' }}
+        style={{ color: value ? 'var(--text-card)' : 'var(--text-card-2)', fontFamily: 'var(--font-body)' }}
       />
     </div>
   )
@@ -148,6 +154,16 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
   const [canScrollLeft, setCanScrollLeft] = useState(false)
   const [canScrollRight, setCanScrollRight] = useState(true)
   const [hoveredStyle, setHoveredStyle] = useState<string | null>(null)
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    setIsDark(document.documentElement.dataset.theme === 'dark')
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.dataset.theme === 'dark')
+    })
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+    return () => observer.disconnect()
+  }, [])
 
   const [choppStyles, setChoppStyles] = useState<ChoppStyle[]>(CHOPP_STYLES)
 
@@ -158,7 +174,8 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
   // Block 2
   const [selectedStyle, setSelectedStyle] = useState<ChoppStyle | null>(null)
   const [liters, setLiters] = useState<number | ''>('')
-  const [extraBarrels, setExtraBarrels] = useState<Array<{ liters: number; styleId: string }>>([])
+  const [mainQuantity, setMainQuantity] = useState(1)
+  const [extraBarrels, setExtraBarrels] = useState<Array<{ liters: number; styleId: string; quantity: number }>>([])
   const [validUntil, setValidUntil] = useState('')
 
   // Block 3
@@ -206,6 +223,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     const style = CHOPP_STYLES.find(s => s.name === initialData.styleName)
     if (style) setSelectedStyle(style)
     setLiters(initialData.mainLiters)
+    if (initialData.mainQuantity) setMainQuantity(initialData.mainQuantity)
     setPricePerLiter(initialData.pricePerLiter)
     setDiscount(initialData.discount)
     setObservations(initialData.observations)
@@ -213,7 +231,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     setDeliveryDate(initialData.deliveryDate)
     setPaymentMethod(initialData.paymentMethod as 'pix' | 'debito' | 'credito' | '')
     setInstallments(initialData.installments)
-    setExtraBarrels(initialData.extraBarrels)
+    setExtraBarrels(initialData.extraBarrels.map(b => ({ ...b, styleId: b.styleId ?? '', quantity: b.quantity ?? 1 })))
     if (initialData.freightValor != null) {
       setFreightInput(String(initialData.freightValor).replace('.', ','))
     } else if (initialData.freightIsento) {
@@ -254,27 +272,29 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
   const finalPrice = priceNum * (1 - discountNum / 100)
 
   const extraSubTotal = extraBarrels.reduce((sum, b) => {
+    const q = b.quantity ?? 1
     if (b.liters === 0) return sum
     const style = b.styleId ? choppStyles.find(s => s.id === b.styleId) : selectedStyle
     if (!style) return sum
-    if (b.styleId === selectedStyle?.id) return sum + b.liters * finalPrice
+    if (b.styleId === selectedStyle?.id) return sum + q * b.liters * finalPrice
     const tablePrice = b.liters >= 30 ? style.priceAbove30 : style.priceBelow30
     const p = typeof extraStylePrices[b.styleId] === 'number' ? extraStylePrices[b.styleId] as number : tablePrice
-    return sum + b.liters * p * (1 - discountNum / 100)
+    return sum + q * b.liters * p * (1 - discountNum / 100)
   }, 0)
 
   const extraSubTotalNoDiscount = extraBarrels.reduce((sum, b) => {
+    const q = b.quantity ?? 1
     if (b.liters === 0) return sum
     const style = b.styleId ? choppStyles.find(s => s.id === b.styleId) : selectedStyle
     if (!style) return sum
-    if (b.styleId === selectedStyle?.id) return sum + b.liters * priceNum
+    if (b.styleId === selectedStyle?.id) return sum + q * b.liters * priceNum
     const tablePrice = b.liters >= 30 ? style.priceAbove30 : style.priceBelow30
     const p = typeof extraStylePrices[b.styleId] === 'number' ? extraStylePrices[b.styleId] as number : tablePrice
-    return sum + b.liters * p
+    return sum + q * b.liters * p
   }, 0)
 
-  const totalAllLiters = litersNum + extraBarrels.reduce((s, b) => s + b.liters, 0)
-  const subTotal = litersNum * finalPrice + extraSubTotal
+  const totalAllLiters = litersNum * mainQuantity + extraBarrels.reduce((s, b) => s + (b.quantity ?? 1) * b.liters, 0)
+  const subTotal = litersNum * mainQuantity * finalPrice + extraSubTotal
   const chopperFee = totalAllLiters > 0 ? calcularTaxaChopeira('eletrica', totalAllLiters) : 0
 
   const freightResult: FreightResult | null = selectedStore && totalAllLiters > 0
@@ -351,7 +371,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     const isEditing = !!initialData?.originalId
 
     const address = cepResult?.address
-    const discountAmount = discountNum > 0 ? (litersNum * priceNum + extraSubTotalNoDiscount) * (discountNum / 100) : 0
+    const discountAmount = discountNum > 0 ? (litersNum * mainQuantity * priceNum + extraSubTotalNoDiscount) * (discountNum / 100) : 0
 
     const payload = {
       createdAt: new Date().toISOString(),
@@ -375,13 +395,14 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         observations: observations || null,
         chopperIsento: isChopperIsento,
         chopperFee: effectiveChopperFee,
+        mainQuantity,
         extraItems: extraBarrels.map(b => {
           const style = b.styleId ? choppStyles.find(s => s.id === b.styleId) : selectedStyle
           const tablePrice = style ? (b.liters >= 30 ? style.priceAbove30 : style.priceBelow30) : 0
           const unitPrice = (b.styleId === selectedStyle?.id)
             ? priceNum
             : (typeof extraStylePrices[b.styleId] === 'number' ? extraStylePrices[b.styleId] as number : tablePrice)
-          return { liters: b.liters, unitPrice, styleName: style?.name ?? '' }
+          return { liters: b.liters, styleId: b.styleId, unitPrice, styleName: style?.name ?? '', quantity: b.quantity ?? 1 }
         }),
         clientCep,
         mainLiters: litersNum,
@@ -429,7 +450,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
   function handleReset() {
     setClientName(''); setClientPhone(''); setClientCep('')
     setCepResult(null); setSelectedStore(null); setCepError('')
-    setSelectedStyle(null); setLiters(''); setPricePerLiter('')
+    setSelectedStyle(null); setLiters(''); setMainQuantity(1); setPricePerLiter('')
     setExtraBarrels([]); setExtraStylePrices({})
     setDiscount(0); setObservations(''); setSuccessBudgetId(null)
     setValidUntil(''); setDeliveryDate(''); setPaymentMethod('')
@@ -447,7 +468,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
             <span className="text-3xl font-bold" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-display)' }}>✓</span>
           </div>
           <h2 className="text-[28px] leading-9 mb-2"
-            style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-display)' }}>
+            style={{ color: 'var(--cor-titulo)', fontFamily: 'var(--font-display)' }}>
             Orçamento processado!
           </h2>
           <p className="text-sm mb-6" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
@@ -458,7 +479,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
           <button
             onClick={handleReset}
             className="btn-laranja w-full rounded-[12px] py-3 text-[16px] font-medium transition-all cursor-pointer"
-            style={{ backgroundColor: 'var(--laranja)', color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+            style={{ backgroundColor: '#f79946', color: '#6c2d01', fontFamily: 'var(--font-body)' }}
           >
             + Criar novo orçamento
           </button>
@@ -486,7 +507,8 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         pricePerLiter={priceNum}
         paymentMethod={paymentLabel}
         discount={discountNum}
-        discountAmount={discountNum > 0 ? (litersNum * priceNum + extraSubTotalNoDiscount) * (discountNum / 100) : 0}
+        discountAmount={discountNum > 0 ? (litersNum * mainQuantity * priceNum + extraSubTotalNoDiscount) * (discountNum / 100) : 0}
+        mainQuantity={mainQuantity}
         extraBarrels={extraBarrels}
         observations={observations}
         chopperNote={isChopperIsento ? 'Taxa de chopeira elétrica: isenta' : `Taxa de chopeira elétrica: ${formatCurrency(effectiveChopperFee)}`}
@@ -496,10 +518,11 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         onBack={handleBack}
         onGeneratePdf={() => {
           const litersLabel = [
-            `${litersNum}L ${selectedStyle.name}`,
+            `${mainQuantity > 1 ? mainQuantity + 'x ' : ''}${litersNum}L ${selectedStyle.name}`,
             ...extraBarrels.map(b => {
               const style = CHOPP_STYLES.find(s => s.id === b.styleId) ?? selectedStyle
-              return `${b.liters}L ${style.name}`
+              const q = b.quantity ?? 1
+              return `${q > 1 ? q + 'x ' : ''}${b.liters}L ${style.name}`
             }),
           ].join(' + ')
           const prevTitle = document.title
@@ -560,7 +583,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
     <>
       <div className="px-7 pt-[72px] pb-8">
         <div className="mb-8">
-          <h1 className="text-[36px] leading-[56px]" style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-[36px] leading-[56px]" style={{ color: 'var(--cor-titulo)', fontFamily: 'var(--font-display)' }}>
             Novo Orçamento
           </h1>
           <p className="text-[16px] leading-[26px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
@@ -608,7 +631,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                     setTimeout(() => { isScrollingRef.current = false }, 600)
                   }}
                   className="btn-seta flex-shrink-0 w-[37px] h-[37px] rounded-full flex items-center justify-center transition-colors cursor-pointer"
-                  style={{ backgroundColor: 'var(--laranja)', color: 'var(--marrom)' }}
+                  style={{ backgroundColor: '#f79946', color: '#6c2d01' }}
                 >
                   <svg width="16" height="14" viewBox="0 0 16 14" fill="none" style={{ transform: 'rotate(180deg)' }}>
                     <path d="M15.8045 7.49522L9.80468 13.7949C9.67959 13.9262 9.50993 14 9.33303 14C9.15612 14 8.98647 13.9262 8.86138 13.7949C8.73629 13.6635 8.66601 13.4854 8.66601 13.2996C8.66601 13.1139 8.73629 12.9358 8.86138 12.8044L13.7237 7.69996H0.666645C0.48984 7.69996 0.320276 7.62622 0.195256 7.49495C0.0702357 7.36368 0 7.18564 0 7C0 6.81436 0.0702357 6.63632 0.195256 6.50505C0.320276 6.37378 0.48984 6.30004 0.666645 6.30004H13.7237L8.86138 1.19557C8.73629 1.06423 8.66601 0.886095 8.66601 0.70035C8.66601 0.514606 8.73629 0.336469 8.86138 0.205128C8.98647 0.0737866 9.15612 0 9.33303 0C9.50993 0 9.67959 0.0737866 9.80468 0.205128L15.8045 6.50478C15.8665 6.56978 15.9156 6.64698 15.9492 6.73196C15.9827 6.81693 16 6.90801 16 7C16 7.09198 15.9827 7.18307 15.9492 7.26804C15.9156 7.35302 15.8665 7.43021 15.8045 7.49522Z" fill="currentColor"/>
@@ -636,16 +659,19 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                         onClick={() => { if (!isSelected) setSelectedStyle(style) }}
                         onMouseEnter={() => setHoveredStyle(style.id)}
                         onMouseLeave={() => setHoveredStyle(null)}
-                        className="flex-none w-[194px] h-[127px] rounded-[12px] border transition-all cursor-pointer flex flex-col items-center justify-center gap-3"
+                        className={`flex-none w-[194px] h-[127px] rounded-[12px] transition-all cursor-pointer flex flex-col items-center justify-center gap-3 style-chopp-card${isSelected ? ' style-chopp-selected' : ''}`}
                         style={{
+                          border: '1px solid',
                           borderColor: 'var(--bege-2)',
-                          backgroundColor: (isSelected || isHovered) ? 'rgba(108,45,1,0.06)' : 'transparent',
+                          backgroundColor: (isSelected || isHovered)
+                            ? (isDark ? '#402f21' : 'rgba(108,45,1,0.06)')
+                            : 'transparent',
                           boxShadow: 'none',
                         }}
                       >
                         <div className="w-12 h-12 rounded-full" style={{ backgroundColor: CIRCLE_COLORS[style.id] ?? style.colorHex }} />
                         <p className="text-[16px] leading-[26px] text-center px-2" style={{
-                          color: isSelected ? 'var(--marrom)' : 'var(--bege-2)',
+                          color: isSelected ? 'var(--text-card)' : 'var(--text-card-2)',
                           fontFamily: 'var(--font-body)',
                           fontWeight: '500',
                         }}>
@@ -667,7 +693,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                     setTimeout(() => { isScrollingRef.current = false }, 600)
                   }}
                   className="btn-seta flex-shrink-0 w-[37px] h-[37px] rounded-full flex items-center justify-center transition-colors cursor-pointer"
-                  style={{ backgroundColor: 'var(--laranja)', color: 'var(--marrom)' }}
+                  style={{ backgroundColor: '#f79946', color: '#6c2d01' }}
                 >
                   <svg width="16" height="14" viewBox="0 0 16 14" fill="none">
                     <path d="M15.8045 7.49522L9.80468 13.7949C9.67959 13.9262 9.50993 14 9.33303 14C9.15612 14 8.98647 13.9262 8.86138 13.7949C8.73629 13.6635 8.66601 13.4854 8.66601 13.2996C8.66601 13.1139 8.73629 12.9358 8.86138 12.8044L13.7237 7.69996H0.666645C0.48984 7.69996 0.320276 7.62622 0.195256 7.49495C0.0702357 7.36368 0 7.18564 0 7C0 6.81436 0.0702357 6.63632 0.195256 6.50505C0.320276 6.37378 0.48984 6.30004 0.666645 6.30004H13.7237L8.86138 1.19557C8.73629 1.06423 8.66601 0.886095 8.66601 0.70035C8.66601 0.514606 8.73629 0.336469 8.86138 0.205128C8.98647 0.0737866 9.15612 0 9.33303 0C9.50993 0 9.67959 0.0737866 9.80468 0.205128L15.8045 6.50478C15.8665 6.56978 15.9156 6.64698 15.9492 6.73196C15.9827 6.81693 16 6.90801 16 7C16 7.09198 15.9827 7.18307 15.9492 7.26804C15.9156 7.35302 15.8665 7.43021 15.8045 7.49522Z" fill="currentColor"/>
@@ -677,20 +703,24 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
             </div>
           </div>
 
-          <div>
-            <FieldLabel>Litros</FieldLabel>
-            <StyledSelect
-              value={String(liters)}
-              onChange={v => setLiters(v === '' ? '' : Number(v))}
-              options={LITER_OPTIONS}
-            />
-          </div>
-          {extraBarrels.length === 0 && (
-            <div className="mt-6">
-              <FieldLabel>Validade do orçamento</FieldLabel>
-              <DatePicker value={validUntil} onChange={setValidUntil} />
+          <div className="grid grid-cols-2 gap-6">
+            <div>
+              <FieldLabel>Litros por barril</FieldLabel>
+              <StyledSelect
+                value={String(liters)}
+                onChange={v => setLiters(v === '' ? '' : Number(v))}
+                options={LITER_OPTIONS}
+              />
             </div>
-          )}
+            <div>
+              <FieldLabel>Quantidade de barris</FieldLabel>
+              <StyledSelect
+                value={String(mainQuantity)}
+                onChange={v => setMainQuantity(Number(v))}
+                options={QUANTITY_OPTIONS}
+              />
+            </div>
+          </div>
 
           {/* Extra barrels */}
           {liters !== '' && selectedStyle && (
@@ -733,8 +763,20 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                         placeholder="Estilo"
                       />
                     </div>
+                    <div className="flex-1">
+                      <StyledSelect
+                        value={barrel.quantity > 1 ? String(barrel.quantity) : ''}
+                        onChange={v => {
+                          const updated = [...extraBarrels]
+                          updated[i] = { ...updated[i], quantity: Number(v) || 1 }
+                          setExtraBarrels(updated)
+                        }}
+                        options={QUANTITY_OPTIONS}
+                        placeholder="Quantidade"
+                      />
+                    </div>
                     {barrel.liters > 0 && barrelPrice != null && (
-                      <p className="text-[13px] flex-shrink-0" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[13px] flex-shrink-0" style={{ color: 'var(--text-card-2)', fontFamily: 'var(--font-body)' }}>
                         R$ {barrelPrice.toFixed(2).replace('.', ',')}/L
                       </p>
                     )}
@@ -750,21 +792,15 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                 )
               })}
               <button
-                onClick={() => setExtraBarrels([...extraBarrels, { liters: 0, styleId: '' }])}
+                onClick={() => setExtraBarrels([...extraBarrels, { liters: 0, styleId: '', quantity: 1 }])}
                 className="mt-3 flex items-center gap-2 text-[14px] font-medium hover:opacity-70 transition-opacity cursor-pointer"
-                style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+                style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}
               >
                 <span className="w-6 h-6 rounded-full flex items-center justify-center text-[16px]" style={{ backgroundColor: 'var(--laranja)', color: 'var(--marrom)' }}>
                   +
                 </span>
                 Adicionar outro barril
               </button>
-              {extraBarrels.length > 0 && (
-                <div className="mt-4">
-                  <FieldLabel>Validade do orçamento</FieldLabel>
-                  <DatePicker value={validUntil} onChange={setValidUntil} />
-                </div>
-              )}
             </div>
           )}
         </SectionCard>
@@ -923,30 +959,30 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
               <div className="flex items-start justify-between gap-4 mb-3">
                 <div className="grid grid-cols-2 gap-4 flex-1">
                   <div>
-                    <p className="text-[16px] font-medium leading-[22px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[16px] font-medium leading-[22px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                       {selectedStore.name}
                     </p>
-                    <p className="text-[14px] leading-[22px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+                    <p className="text-[14px] leading-[22px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                       {selectedStore.distanciaKm} km de distância
                     </p>
                     <div className="flex items-center gap-2 mt-2">
                       <svg width="14" height="18" viewBox="0 0 14 18" fill="none">
-                        <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5C5.62 9.5 4.5 8.38 4.5 7S5.62 4.5 7 4.5 9.5 5.62 9.5 7 8.38 9.5 7 9.5z" fill="var(--marrom)"/>
+                        <path d="M7 0C3.13 0 0 3.13 0 7c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5C5.62 9.5 4.5 8.38 4.5 7S5.62 4.5 7 4.5 9.5 5.62 9.5 7 8.38 9.5 7 9.5z" fill="#6c2d01"/>
                       </svg>
-                      <p className="text-[14px] leading-[22px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[14px] leading-[22px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                         {selectedStore.address} — {selectedStore.city}/{selectedStore.state}
                       </p>
                     </div>
                   </div>
                   {cepResult.address && (
                     <div style={{ borderLeft: '1px solid rgba(108,45,1,0.2)', paddingLeft: '1rem' }}>
-                      <p className="text-[13px] font-medium leading-[20px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[13px] font-medium leading-[20px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                         Endereço do cliente
                       </p>
-                      <p className="text-[13px] leading-[20px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[13px] leading-[20px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                         {[cepResult.address.logradouro, cepResult.address.bairro].filter(Boolean).join(', ')}
                       </p>
-                      <p className="text-[13px] leading-[20px]" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+                      <p className="text-[13px] leading-[20px]" style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}>
                         {cepResult.address.localidade}/{cepResult.address.uf}
                       </p>
                     </div>
@@ -955,7 +991,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                 <button
                   onClick={() => setShowStoreSelector(!showStoreSelector)}
                   className="text-[14px] font-medium flex-shrink-0 hover:opacity-70 transition-opacity cursor-pointer"
-                  style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+                  style={{ color: '#6c2d01', fontFamily: 'var(--font-body)' }}
                 >
                   {showStoreSelector ? 'Fechar ▲' : 'Trocar'}
                 </button>
@@ -969,7 +1005,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                       className="w-full text-left px-4 py-2.5 rounded-[8px] text-[14px] cursor-pointer transition-colors"
                       style={{
                         backgroundColor: selectedStore.id === store.id ? 'rgba(108,45,1,0.15)' : 'transparent',
-                        color: 'var(--marrom)',
+                        color: '#6c2d01',
                         fontFamily: 'var(--font-body)',
                       }}
                       onMouseEnter={e => { (e.currentTarget as HTMLElement).style.backgroundColor = 'rgba(108,45,1,0.2)' }}
@@ -995,11 +1031,11 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                   <button
                     type="button"
                     onClick={() => setChopperIsentoOverride(false)}
-                    className="chopper-toggle flex-1 rounded-[8px] py-3 text-[14px] font-medium transition-all cursor-pointer"
+                    className={`chopper-toggle flex-1 rounded-[8px] py-3 text-[14px] font-medium transition-all cursor-pointer${!isChopperIsento ? '' : ' chopper-inactive'}`}
                     style={{
-                      backgroundColor: !isChopperIsento ? 'var(--laranja)' : 'transparent',
-                      color: !isChopperIsento ? 'var(--marrom)' : 'var(--marrom)',
-                      border: !isChopperIsento ? '1px solid var(--laranja)' : '1px solid var(--bege-2)',
+                      backgroundColor: !isChopperIsento ? '#f79946' : 'transparent',
+                      color: !isChopperIsento ? '#6c2d01' : undefined,
+                      border: !isChopperIsento ? '1px solid #f79946' : '1px solid #8f7b65',
                       fontFamily: 'var(--font-body)',
                     }}
                   >
@@ -1008,11 +1044,11 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                   <button
                     type="button"
                     onClick={() => setChopperIsentoOverride(true)}
-                    className="chopper-toggle flex-1 rounded-[8px] py-3 text-[14px] font-medium transition-all cursor-pointer"
+                    className={`chopper-toggle flex-1 rounded-[8px] py-3 text-[14px] font-medium transition-all cursor-pointer${isChopperIsento ? '' : ' chopper-inactive'}`}
                     style={{
-                      backgroundColor: isChopperIsento ? 'var(--laranja)' : 'transparent',
-                      color: 'var(--marrom)',
-                      border: isChopperIsento ? '1px solid var(--laranja)' : '1px solid var(--bege-2)',
+                      backgroundColor: isChopperIsento ? '#f79946' : 'transparent',
+                      color: isChopperIsento ? '#6c2d01' : undefined,
+                      border: isChopperIsento ? '1px solid #f79946' : '1px solid #8f7b65',
                       fontFamily: 'var(--font-body)',
                     }}
                   >
@@ -1021,14 +1057,14 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                 </div>
                 {!isChopperIsento && (
                   <div className="flex items-center rounded-[8px] border px-4 py-3" style={{ borderColor: 'var(--bege-2)' }}>
-                    <span className="text-[14px] mr-2" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>R$</span>
+                    <span className="text-[14px] mr-2" style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}>R$</span>
                     <input
                       type="text"
                       inputMode="decimal"
                       value={chopperFeeInput}
                       onChange={e => setChopperFeeInput(e.target.value.replace(/[^0-9,.]/, ''))}
                       className="flex-1 bg-transparent outline-none text-[14px]"
-                      style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+                      style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}
                       placeholder="0,00"
                     />
                   </div>
@@ -1042,7 +1078,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                 onChange={e => setObservations(e.target.value)}
                 rows={6}
                 className="obs-textarea w-full bg-transparent outline-none text-[14px] leading-[22px] resize-none"
-                style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+                style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}
                 placeholder="Digite observações sobre o orçamento, condições especiais, prazos de entrega, etc"
               />
             </div>
@@ -1055,10 +1091,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
         className="fixed bottom-0 left-[241px] right-0 px-7 py-4 flex items-center justify-between z-10"
         style={{ backgroundColor: 'var(--bege-claro)', borderTop: '1px solid var(--bege-3)' }}
       >
-        <p className="text-[14px]" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
-          *Este orçamento será automaticamente encaminhado para o RD Station
-        </p>
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-6 ml-auto">
           <div className="flex flex-col items-end">
             <span className="text-[12px]" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
               Valor total
@@ -1071,7 +1104,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
             onClick={handleAvançar}
             disabled={!canSubmit}
             className="btn-laranja flex items-center gap-3 rounded-[12px] px-6 py-2 text-[16px] font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            style={{ backgroundColor: 'var(--laranja)', color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}
+            style={{ backgroundColor: '#f79946', color: '#6c2d01', fontFamily: 'var(--font-body)' }}
           >
             Avançar
             <svg width="16" height="14" viewBox="0 0 16 14" fill="none">

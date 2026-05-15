@@ -80,11 +80,11 @@ export default function DatePicker({
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between rounded-[8px] border px-4 py-3 cursor-pointer text-[14px] leading-[22px] transition-colors"
+        className="date-field-wrapper w-full flex items-center justify-between rounded-[8px] border px-4 py-3 cursor-pointer text-[14px] leading-[22px] transition-colors"
         style={{
           borderColor: open ? 'var(--marrom)' : 'var(--bege-2)',
           backgroundColor: open ? 'rgba(108,45,1,0.06)' : 'transparent',
-          color: displayText ? 'var(--marrom)' : 'var(--bege-2)',
+          color: displayText ? 'var(--text-card)' : 'var(--text-card-2)',
           fontFamily: 'var(--font-body)',
         }}
       >
@@ -119,7 +119,7 @@ export default function DatePicker({
                 <path d="M6.41 1.41L5 0L0 5.5L5 11L6.41 9.59L2.83 5.5L6.41 1.41Z"/>
               </svg>
             </button>
-            <span className="text-[15px] font-medium" style={{ color: 'var(--marrom)', fontFamily: 'var(--font-body)' }}>
+            <span className="text-[15px] font-medium" style={{ color: 'var(--text-card)', fontFamily: 'var(--font-body)' }}>
               {MONTHS_PT[viewMonth]} de {viewYear}
             </span>
             <button
@@ -138,7 +138,7 @@ export default function DatePicker({
           <div className="grid grid-cols-7 mb-1">
             {DAYS_PT.map((d, i) => (
               <div key={i} className="text-center text-[12px] py-1 font-medium"
-                style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
+                style={{ color: 'var(--text-card-2)', fontFamily: 'var(--font-body)' }}>
                 {d}
               </div>
             ))}
@@ -157,7 +157,7 @@ export default function DatePicker({
                   className="flex items-center justify-center w-9 h-9 mx-auto rounded-full text-[13px] cursor-pointer transition-colors"
                   style={{
                     backgroundColor: isSel ? 'var(--laranja)' : 'transparent',
-                    color: isSel ? '#6C2D01' : cur ? 'var(--marrom)' : 'var(--bege-3)',
+                    color: isSel ? '#6C2D01' : cur ? 'var(--text-card)' : 'var(--bege-3)',
                     fontWeight: isSel ? '700' : '400',
                     fontFamily: 'var(--font-body)',
                   }}
