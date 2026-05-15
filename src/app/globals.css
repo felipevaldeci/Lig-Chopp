@@ -152,6 +152,10 @@ input[type="date"] {
 input::placeholder,
 textarea::placeholder { color: var(--text-card-2); }
 
+/* Login inputs always on red background — placeholder stays light */
+.login-input::placeholder { color: rgba(254,230,206,0.6) !important; }
+[data-theme="dark"] .login-input::placeholder { color: rgba(254,230,206,0.6) !important; }
+
 /* Select fields hover */
 .field-select-wrapper {
   transition: border-color 0.15s, background-color 0.15s;

@@ -87,16 +87,16 @@ export default function LoginPage() {
           {/* Usuário */}
           <div
             className="flex items-center gap-3 rounded-[12px] border px-4 py-3"
-            style={{ borderColor: 'var(--bege)' }}
+            style={{ borderColor: '#fee6ce' }}
           >
             <Image src="/assets/user-icon.svg" alt="" width={20} height={20} />
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-sm"
+              className="login-input flex-1 bg-transparent outline-none text-sm"
               style={{
-                color: 'var(--bege)',
+                color: '#fee6ce',
                 fontFamily: 'var(--font-body)',
               }}
               placeholder="Usuário"
@@ -107,16 +107,16 @@ export default function LoginPage() {
           {/* Senha */}
           <div
             className="flex items-center gap-3 rounded-[12px] border px-4 py-3"
-            style={{ borderColor: 'var(--bege)' }}
+            style={{ borderColor: '#fee6ce' }}
           >
             <Image src="/assets/lock.svg" alt="" width={20} height={20} />
             <input
               type={showPassword ? 'text' : 'password'}
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="flex-1 bg-transparent outline-none text-sm [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+              className="login-input flex-1 bg-transparent outline-none text-sm [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
               style={{
-                color: 'var(--bege)',
+                color: '#fee6ce',
                 fontFamily: 'var(--font-body)',
               }}
               placeholder="Senha"
@@ -149,7 +149,7 @@ export default function LoginPage() {
               onChange={e => setRememberMe(e.target.checked)}
               className="w-4 h-4 cursor-pointer accent-[#f79946]"
             />
-            <span className="text-sm" style={{ color: 'var(--bege)', fontFamily: 'var(--font-body)' }}>
+            <span className="text-sm" style={{ color: '#fee6ce', fontFamily: 'var(--font-body)' }}>
               Lembrar meus dados
             </span>
           </label>
@@ -166,8 +166,8 @@ export default function LoginPage() {
             disabled={loading}
             className="btn-login w-full rounded-[12px] border py-[8px] text-center text-[16px] font-medium transition-all disabled:opacity-60 cursor-pointer mt-2"
             style={{
-              borderColor: 'var(--bege)',
-              color: 'var(--bege)',
+              borderColor: '#fee6ce',
+              color: '#fee6ce',
               fontFamily: 'var(--font-body)',
             }}
           >

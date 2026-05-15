@@ -77,7 +77,7 @@ export default function MeusOrcamentos({ userEmail }: { userEmail: string }) {
       <div className="mb-8">
         <h1
           className="text-[36px] leading-[56px]"
-          style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-display)' }}
+          style={{ color: 'var(--cor-titulo)', fontFamily: 'var(--font-display)' }}
         >
           Meus Orçamentos
         </h1>
@@ -366,7 +366,7 @@ export default function MeusOrcamentos({ userEmail }: { userEmail: string }) {
               <div>
                 <h3
                   className="text-[20px]"
-                  style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-display)' }}
+                  style={{ color: 'var(--cor-titulo)', fontFamily: 'var(--font-display)' }}
                 >
                   Detalhes
                 </h3>
@@ -413,7 +413,7 @@ export default function MeusOrcamentos({ userEmail }: { userEmail: string }) {
                 <p className="text-[14px] mb-1" style={{ color: 'var(--bege-2)', fontFamily: 'var(--font-body)' }}>
                   Valor total
                 </p>
-                <p className="text-[28px]" style={{ color: 'var(--vermelho)', fontFamily: 'var(--font-display)' }}>
+                <p className="text-[28px]" style={{ color: 'var(--cor-titulo)', fontFamily: 'var(--font-display)' }}>
                   {formatCurrency(selectedBudget.total)}
                 </p>
               </div>
