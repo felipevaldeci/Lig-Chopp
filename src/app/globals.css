@@ -72,8 +72,8 @@ body {
 
 /* Button hover states */
 .btn-laranja:hover:not(:disabled) {
-  background-color: var(--vermelho) !important;
-  color: var(--bege) !important;
+  background-color: #c92b1f !important;
+  color: #fee6ce !important;
 }
 
 .btn-login:hover {

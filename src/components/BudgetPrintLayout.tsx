@@ -195,7 +195,7 @@ export default function BudgetPrintLayout(p: BudgetPrintLayoutProps) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, marginBottom: 0 }}>
           <div>
             <p style={{ fontSize: 13, color: C.marrom, margin: 0, marginBottom: 3 }}>
-              <span style={{ fontWeight: 700 }}>Pagamento: </span>A combinar
+              <span style={{ fontWeight: 700 }}>Pagamento: </span>Pix, cartão de crédito ou cartão de débito
             </p>
             {p.deliveryDate && (
               <p style={{ fontSize: 13, color: C.marrom, margin: 0 }}>
