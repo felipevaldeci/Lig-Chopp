@@ -84,6 +84,7 @@ export default function Sidebar({ user }: SidebarProps) {
   }
 
   async function handleLogout() {
+    localStorage.removeItem('lig-chopp-credentials')
     await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/login')
   }
