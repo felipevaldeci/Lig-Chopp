@@ -454,8 +454,8 @@ export default function CoordenadorPage() {
                 rel="noreferrer"
                 className="btn-laranja w-full rounded-[12px] py-2.5 text-[14px] font-medium transition-colors cursor-pointer flex items-center justify-center gap-2 no-underline"
                 style={{
-                  backgroundColor: 'var(--laranja)',
-                  color: 'var(--marrom)',
+                  backgroundColor: '#f79946',
+                  color: '#6c2d01',
                   fontFamily: 'var(--font-body)',
                   textDecoration: 'none',
                 }}

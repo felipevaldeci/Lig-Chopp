@@ -841,28 +841,18 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                         )
                       })}
                     </div>
-                    <div className="grid grid-cols-2 gap-6 mb-6">
-                      <div>
-                        <FieldLabel>Forma de pagamento</FieldLabel>
-                        <StyledSelect
-                          value={paymentMethod}
-                          onChange={v => { setPaymentMethod(v as typeof paymentMethod); setInstallments(1) }}
-                          options={PAYMENT_OPTIONS}
-                        />
-                      </div>
-                      <div>
-                        <FieldLabel>Desconto (%)</FieldLabel>
-                        <FieldInput
-                          type="number"
-                          value={discount}
-                          onChange={e => setDiscount(e.target.value === '' ? '' : Number(e.target.value))}
-                          placeholder="0"
-                        />
-                      </div>
+                    <div className="mb-6">
+                      <FieldLabel>Desconto (%)</FieldLabel>
+                      <FieldInput
+                        type="number"
+                        value={discount}
+                        onChange={e => setDiscount(e.target.value === '' ? '' : Number(e.target.value))}
+                        placeholder="0"
+                      />
                     </div>
                   </>
                 ) : (
-                  <div className="grid grid-cols-3 gap-6 mb-6">
+                  <div className="grid grid-cols-2 gap-6 mb-6">
                     <div>
                       <FieldLabel>Preço por litro (R$)</FieldLabel>
                       <FieldInput
@@ -870,14 +860,6 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
                         value={pricePerLiter}
                         onChange={e => setPricePerLiter(e.target.value === '' ? '' : Number(e.target.value))}
                         placeholder="0,00"
-                      />
-                    </div>
-                    <div>
-                      <FieldLabel>Forma de pagamento</FieldLabel>
-                      <StyledSelect
-                        value={paymentMethod}
-                        onChange={v => { setPaymentMethod(v as typeof paymentMethod); setInstallments(1) }}
-                        options={PAYMENT_OPTIONS}
                       />
                     </div>
                     <div>
@@ -894,18 +876,6 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
               </>
             )
           })()}
-
-          {paymentMethod === 'credito' && (
-            <div className="mb-6">
-              <FieldLabel>Parcelamento</FieldLabel>
-              <StyledSelect
-                value={String(installments)}
-                onChange={v => setInstallments(Number(v))}
-                options={INSTALLMENT_OPTIONS}
-                placeholder=""
-              />
-            </div>
-          )}
 
           {discountWarning && (
             <div
