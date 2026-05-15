@@ -262,9 +262,8 @@ export default function ConfirmationView({
 
         {/* BLOCO 4 — Precificação */}
         <SectionCard number="4" title="Precificação">
-          <div className="grid grid-cols-3 gap-6 mb-6">
+          <div className="grid grid-cols-2 gap-6 mb-6">
             <ReadInput label="Preço por litro (R$)" value={formatCurrency(pricePerLiter)} />
-            <ReadInput label="Forma de pagamento" value={paymentMethod || '—'} />
             <ReadInput
               label="Desconto (%)"
               value={discountNum > 0 ? `${discountNum}%` : 'Sem desconto'}
