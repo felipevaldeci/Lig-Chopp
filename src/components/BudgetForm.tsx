@@ -297,7 +297,7 @@ export default function BudgetForm({ user, initialData }: BudgetFormProps) {
   const subTotal = litersNum * mainQuantity * finalPrice + extraSubTotal
   const chopperFee = totalAllLiters > 0 ? calcularTaxaChopeira('eletrica', totalAllLiters) : 0
 
-  const freightResult: FreightResult | null = selectedStore && totalAllLiters > 0
+  const freightResult: FreightResult | null = selectedStore
     ? calcularFrete(selectedStore.distanciaKm, totalAllLiters, selectedStore.region)
     : null
 

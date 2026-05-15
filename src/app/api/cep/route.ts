@@ -8,6 +8,9 @@ function fetchWithTimeout(url: string, options: RequestInit = {}, ms = 3000): Pr
   return fetch(url, { ...options, signal: ac.signal }).finally(() => clearTimeout(timer))
 }
 
+// Cache de coordenadas por CEP do cliente — persiste enquanto o processo viver
+const clientGeoCache = new Map<string, { lat: number; lng: number }>()
+
 export async function GET(req: NextRequest) {
   const cep = req.nextUrl.searchParams.get('cep')?.replace(/\D/g, '')
 
@@ -31,19 +34,28 @@ export async function GET(req: NextRequest) {
   let clientLat: number | null = null
   let clientLng: number | null = null
 
-  // 2a. AwesomeAPI — returns lat/lng directly for virtually all BR CEPs
-  try {
-    const res = await fetchWithTimeout(`https://cep.awesomeapi.com.br/json/${cep}`, { cache: 'no-store' })
-    if (res.ok) {
-      const data = await res.json()
-      if (data?.lat && data?.lng) {
-        clientLat = parseFloat(data.lat)
-        clientLng = parseFloat(data.lng)
-      }
-    }
-  } catch { /* fall through */ }
+  // 2a. Verificar cache em memória primeiro
+  const cached = clientGeoCache.get(cep)
+  if (cached) {
+    clientLat = cached.lat
+    clientLng = cached.lng
+  }
 
-  // 2b. BrasilAPI v2 fallback
+  // 2b. AwesomeAPI — returns lat/lng directly for virtually all BR CEPs
+  if (clientLat === null) {
+    try {
+      const res = await fetchWithTimeout(`https://cep.awesomeapi.com.br/json/${cep}`, { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data?.lat && data?.lng) {
+          clientLat = parseFloat(data.lat)
+          clientLng = parseFloat(data.lng)
+        }
+      }
+    } catch { /* fall through */ }
+  }
+
+  // 2c. BrasilAPI v2 fallback
   if (clientLat === null) {
     try {
       const res = await fetchWithTimeout(`https://brasilapi.com.br/api/cep/v2/${cep}`, { cache: 'no-store' })
@@ -59,7 +71,7 @@ export async function GET(req: NextRequest) {
     } catch { /* fall through */ }
   }
 
-  // 2c. Nominatim last resort (city-level)
+  // 2d. Nominatim last resort (city-level)
   if (clientLat === null) {
     try {
       const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(`${viaCepData.localidade}, ${viaCepData.uf}, Brasil`)}&format=json&limit=1`
@@ -80,6 +92,9 @@ export async function GET(req: NextRequest) {
   if (clientLat === null || clientLng === null) {
     return NextResponse.json({ error: 'Não foi possível localizar o endereço. Verifique o CEP e tente novamente.' }, { status: 404 })
   }
+
+  // Salvar no cache para requisições futuras do mesmo CEP
+  clientGeoCache.set(cep, { lat: clientLat, lng: clientLng })
 
   // Step 3: load stores
   let stores = await getStoresWithCoords()
